@@ -11,7 +11,7 @@ You can install this package from the Racket package server using the command
 below:
 
 ```
-rack pkg install plot-container
+raco pkg install plot-container
 ```
 
 [al2id]: https://github.com/alex-hhh/AL2-IRisk-Dashboard
