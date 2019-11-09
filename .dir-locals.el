@@ -10,8 +10,6 @@
                (mode . bug-reference)))
  (shell-script-mode . ((mode . goto-address)
                        (mode . bug-reference)))
- (log-view-mode . ((mode . goto-address)
-                   (mode . bug-reference)))
  (log-edit-mode . ((mode . goto-address)
                    (mode . bug-reference)))
  (markdown-mode . ((mode . goto-address)
