@@ -19,7 +19,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (require "private/plot-container.rkt")
-(provide plot-container%)
+(provide (all-from-out "private/plot-container.rkt"))
 
 ;; raco setup --check-pkg-deps --pkgs plot-container
 ;; raco test --no-run-if-absent --package plot-container

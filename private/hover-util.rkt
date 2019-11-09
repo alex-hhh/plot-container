@@ -98,7 +98,7 @@
 ;; NOTES: any #f values in LABELS are discarded (this makes the use of
 ;; `hover-label` more convenient).  If multiple labels are provided they are
 ;; stacked vertically using `vl-append`.
-(define (hover-label x y . labels)
+(define (hover-label x y #:anchor [anchor 'auto] . labels)
   (when point-pict-1
     (if (and (= (length labels) 1) (pict? (car labels)))
         ;; Special case: a single pict passed in is displayed as is...
@@ -117,7 +117,7 @@
                                               #:draw-border? #f
                                               #:color hover-tag-background)
                     p1)))
-          (point-pict-1 (vector x y) p2 #:point-sym 'none #:anchor 'auto)))))
+          (point-pict-1 (vector x y) p2 #:point-sym 'none #:anchor anchor)))))
 
 ;; Create a vertical rectangle overlay renderer between XMIN and XMAX using
 ;; COLOR.  The rectangle will cover the entire height of the plot between XMIN
@@ -289,7 +289,7 @@
  (set-mouse-event-callback (-> (is-a?/c snip%) (-> (is-a?/c snip%) (is-a?/c mouse-event%) (or/c #f number?) (or/c #f number?) any/c) any/c))
  (set-overlay-renderers (-> (is-a?/c snip%) (or/c (treeof renderer2d?) #f null) any/c))
  (hover-vrule (-> real? renderer2d?))
- (hover-label (->* (real? real?) () #:rest (listof (or/c string? pict? #f)) renderer2d?))
+ (hover-label (->* (real? real?) (#:anchor anchor/c) #:rest (listof (or/c string? pict? #f)) renderer2d?))
  (hover-vrange (-> real? real? (is-a?/c color%) renderer2d?))
  (hover-markers (-> (listof (vector/c real? real?)) renderer2d?))
  (make-hover-badge (-> (listof (listof (or/c #f string?))) pict?))

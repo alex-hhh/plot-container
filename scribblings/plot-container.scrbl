@@ -5,6 +5,7 @@
                     racket/base
                     pict/snip
                     plot/no-gui
+                    plot/snip
                     plot/utils]]
 
 @title{plot-container -- Embed plot snips to GUI applications}
@@ -17,22 +18,24 @@
 @defclass[plot-container% editor-canvas% ()]{
 
   The @racket[plot-container%] class is a GUI container that can be used to
-  embed plots produced by @racket[plot-snip] in GUI applications. It supports
-  building interactive GUI applications which display plot data, especially
-  when combined with using the @racket[2d-plot-snip%]'s
-  @racket[set-mouse-event-callback] method to install on-hover callbacks for
-  the plots.  The container has the following features:
+  embed @racket[snip%] objects such as plots produced by @racket[plot-snip] in
+  GUI applications. It supports building interactive GUI applications which
+  display different types of data, for example, when plot snips are combined
+  with using @xmethod[2d-plot-snip% set-mouse-event-callback] to install
+  on-hover callbacks for the plots.  The container has the following features:
 
-  @bold{Plot snips} will be arranged in rows and columns such that each occupy
-  an equal amount of space -- i.e. all snips have the same size.  The snips
-  will be resized dynamically if the container itself changes size or new
-  snips are added.  The number of columns is specified when the
+  @bold{Snips} will be arranged either using a specified layout (see
+  @racket[set-snips/layout]) or, by default, in rows and columns such that
+  each occupy an equal amount of space -- i.e. all snips have the same size.
+  The snips will be resized dynamically if the container itself changes size
+  or new snips are added.  The number of columns is specified when the
   @racket[plot-container%] is instantiated and the number of rows will be
   calculated based on the number of snips and the column count.  The plot
   snips must be any @racket[snip%], but this container class was originally
   intended to display plots produced by @racket[plot-snip], thus its name.
-  Plot snips can be added using the @racket[add-plot-snip],
-  @racket[set-plot-snip] or @racket[set-plot-snips] methods.
+  Plot snips can be added to the container using @method[plot-container%
+  set-snip] or @method[plot-container% set-snips] or @method[plot-container%
+  set-snips/layout].
 
   @bold{Floating snips} will show up on top of the plot snips and are not
   placed in rows and columns, instead the user can drag them around and they
@@ -42,11 +45,11 @@
   floating snip, in particular @racket[pict-snip%] instances are useful for
   constructing images based on the pict package.
 
-  A @bold{background message} can be set up to be shown when the plot
+  A @bold{Background Message} can be set up to be shown when the plot
   container is empty, see @racket[set-background-message].  This is useful, as
   the contents of the plot container can be changed dynamically at runtime.
 
-  A @bold{floating snip} can be added using @racket[set-hover-pict] or
+  A @bold{Floating Snip} can be added using @racket[set-hover-pict] or
   @racket[set-hover-pict-at-mouse-event].  This is intended to support
   implementing tooltips or displaying additional information when the user
   hovers the mouse over various plot elements.
@@ -77,6 +80,12 @@
     correct dimensions and avoid a snip resize operation when these snips are
     added to the container.
 
+    @bold{WARNING} The cell dimensions are only valid if the snips are
+    arranged in rows and columns by calling @racket[add-snips].  If a layout
+    is used, as per @racket[add-snips/layout], the cell dimensions returned by
+    this method will not correspond to the ones assigned to the snips in the
+    layout.
+
   }
 
   @defmethod[(clear-all) any/c]{
@@ -85,28 +94,26 @@
 
   }
 
-  @defmethod[(add-plot-snip [snip (is-a?/c snip%)]) any/c]{
-
-    Add @racket[snip] to the list of snips managed by the container.  All the
-    existing snips will be resized to make room for the new snip.
-
-  }
-
-  @defmethod[(set-plot-snip [snip (is-a?/c snip%)]) any/c]{
+  @defmethod[(set-snip [snip (is-a?/c snip%)]) any/c]{
 
     Set @racket[snip] as the only snip managed by the container, replacing any
     previous plot snips.
 
   }
 
-  @defmethod[(set-plot-snips [snip (is-a?/c snip%)] ...) any/c]{
+  @defmethod[(set-snips [snip (is-a?/c snip%)] ...) any/c]{
 
     Set the contents of the container to the @racket[snip] instances passed in
     as paramters, replacing any previous plot snips.
 
-    If you need to add multiple snips to the container, it is better to use
-    this method instead of calling @racket[add-plot-snip] repeteadly, because
-    this method will only resize the snips once for the final layout.
+  }
+
+  @defmethod[(set-snips/layout [group plot-container-group?]) any/c]{
+
+    Set the contents of the container to the @racket[group], which is a group
+    of snips created using @racket[hgroup], @racket[vgroup] and
+    @racket[cgroup].  This method allows subdividing the contents of the
+    container area in a tree-like fashion.
 
   }
 
@@ -154,16 +161,57 @@
 
 }
 
+@defproc[(plot-container-group? [group any/c]) boolean?]{
+
+  Check if the argument is a snip group, as produced by @racket[vgroup],
+  @racket[hgroup] or @racket[cgroup].
+
+}
+
+@deftogether[(@defproc[(vgroup [item (listof (or/c plot-container-group? (is-a?/c snip%)))] ...
+                               [#:border border (or/c positive? zero?) 0]
+                               [#:spacing spacing (or/c positive? zero?) 5])
+                       plot-container-group?]
+             @defproc[(hgroup [item (listof (or/c plot-container-group? (is-a?/c snip%)))] ...
+                              [#:border border (or/c positive? zero?) 0]
+                              [#:spacing spacing (or/c positive? zero?) 5])
+                      plot-container-group?]
+             @defproc[(cgroup [columns positive-integer?]
+                              [item (listof (or/c plot-container-group? (is-a?/c snip%)))] ...
+                              [#:border border (or/c positive? zero?) 0]
+                              [#:spacing spacing (or/c positive? zero?) 5])
+                      plot-container-group?])]{
+
+  Arrange all @racket[item]s with a @racket[border] around all the group and
+  @racket[spacing] space between items.  All items will have the same
+  dimensions and any @racket[plot-container-group?] items will have this space
+  sub-divided among the items in that group.  The result of these functions
+  are intended to be passed to @xmethod[plot-container% set-snips/layout].
+
+  @racket[vgroup] will place items in one vertical column with the height
+  equally divided between all items.
+
+  @racket[hgroup] will place items in one horizontal row with the width
+  equally divided between all items.
+
+  @racket[cgroup] will place all items in @racket[columns], with the number of
+  rows depending on the number of itmes.  The width is divided equally between
+  the number of columns and the height is divided equally between the number
+  of rows.
+
+}
+
+
 @section{Some utility functions to use with plots and plot containers}
 
 @defmodule[plot-container/hover-util]
 
 This module provides a collection of helper functions for building interactive
 plots.  The @racket[plot-snip] function returns a @racket[snip%] representing
-the plot, and this snip has two additional methods
-@racket[set-mouse-event-callback] and @racket[set-overlay-renderers] which
-help with this. See the plot documentation for @racket[2d-plot-snip%] for more
-details.
+the plot, and this snip has two additional methods, @method[2d-plot-snip%
+set-mouse-event-callback] and @method[2d-plot-snip% set-overlay-renderers],
+which help with this. See the plot documentation for @racket[2d-plot-snip%]
+for more details.
 
 @defproc[(good-hover? [snip (is-a?/c snip%)]
                       [x (or/c real? #f)]
