@@ -182,14 +182,17 @@
 ;; inside the canvas.  Assumes the SNIP is added to an editor.
 (define (move-snip-to snip location)
   (match-let (((cons x y) (or location (cons 50 50))))
-    (define editor (send (send snip get-admin) get-editor))
-    (define canvas (send editor get-canvas))
-    ;; Adjust the coordinates X Y such that the snip is placed inside the
-    ;; canvas.
-    (let-values (((width height) (send canvas get-size)))
-      (let ((adjusted-x (max 0 (min x (- width (snip-width snip)))))
-            (adjusted-y (max 0 (min y (- height (snip-height snip))))))
-        (send editor move-to snip adjusted-x adjusted-y)))))
+    (define admin (send snip get-admin))
+    (when admin
+      (define editor (send admin get-editor))
+      (when editor
+        (define canvas (send editor get-canvas))
+        ;; Adjust the coordinates X Y such that the snip is placed inside the
+        ;; canvas.
+        (let-values (((width height) (send canvas get-size)))
+          (let ((adjusted-x (max 0 (min x (- width (snip-width snip) 20))))
+                (adjusted-y (max 0 (min y (- height (snip-height snip) 20)))))
+            (send editor move-to snip adjusted-x adjusted-y)))))))
 
 ;; Convert the X position received by the hover callback in a histogram plot
 ;; back to the series and the slot withing that series.  SKIP and GAP are the
@@ -264,21 +267,17 @@
   ;; this initial sizing ensures there is no flickering when a snip with a
   ;; different size is inserted into the canvas forcing the canvas to resize
   ;; it immediately.
-  (let-values (((w h) (send (send canvas get-dc) get-size)))
-    (let* ((hinset (send canvas horizontal-inset))
-           (vinset (send canvas vertical-inset))
-           (iw (exact-round (- w (* 2 hinset))))
-           (ih (exact-round (- h (* 2 vinset))))
-           [snip (plot-snip renderer-tree
+  (let-values (((w h) (send canvas cell-dimensions 1)))
+    (define snip (plot-snip renderer-tree
                             #:x-min x-min #:x-max x-max
                             #:y-min y-min #:y-max y-max
-                            #:width (if (> iw 0) iw width)
-                            #:height (if (> ih 0) ih height)
+                            #:width (if (> w 0) w width)
+                            #:height (if (> h 0) h height)
                             #:title title
                             #:x-label x-label #:y-label y-label
-                            #:legend-anchor legend-anchor)])
+                            #:legend-anchor legend-anchor))
       (send canvas set-snip snip)
-      snip)))
+      snip))
 
 
 ;;............................................................. provides ....

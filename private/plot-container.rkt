@@ -220,6 +220,7 @@
 ;; Insert into the pasteboard all the snips in the snip-group GROUP, replacing
 ;; any other snips in the pasteboard PB.
 (define (insert-group-contents pb group)
+  (send pb select-all)
   (send pb clear)
   (match-define (snip-group border spacing columns contents) group)
   (for ([item (in-list contents)])
@@ -269,7 +270,10 @@
    (init [parent (or/c (is-a?/c frame%) (is-a?/c dialog%)
                        (is-a?/c panel%) (is-a?/c pane%))])
    (init-field [columns positive-integer?] [spacing positive-integer?])
-   (cell-dimensions (->m positive-integer? (values positive-integer? positive-integer?)))
+   (cell-dimensions (->*m (positive-integer?)
+                          (#:columns positive-integer?
+                           #:spacing positive-integer?)
+                          (values positive-integer? positive-integer?)))
    (clear-all (->m any/c))
    (set-plot-snip (->m (is-a?/c snip%) any/c))
    (set-plot-snips (->*m () #:rest (listof (is-a?/c snip%)) any/c))
@@ -280,7 +284,11 @@
    (set-floating-snip (->m (or/c #f (is-a?/c snip%)) real? real? any/c))
    (set-background-message (->m (or/c #f string?) any/c))
    (set-hover-pict (->m (or/c #f pict?) real? real? any/c))
-   (set-hover-pict-at-mouse-event (->m (or/c #f pict?) (is-a?/c mouse-event%) any/c))))
+   (set-hover-pict-at-mouse-event (->m (or/c #f pict?) (is-a?/c mouse-event%) any/c))
+   (export-image-to-file (->*m (path-string?)
+                               ((or/c positive-integer? #f) (or/c positive-integer? #f))
+                               any/c))
+   ))
 
 ;; An editor-canvas% for holding one or more plot snips with support for
 ;; additional features: floating snips for implementing plot legends that can
@@ -318,7 +326,9 @@
     ;; using `set-plot-snips`.  If the snips are grouped (see vgroup, hgroup
     ;; and cgroup and `set-snips/layout`, the cell dimensions for each snip
     ;; will depend on the position inside the layout grid).
-    (define/public (cell-dimensions snip-count)
+    (define/public (cell-dimensions snip-count
+                                    #:columns [columns columns]
+                                    #:spacing [spacing spacing])
       (define-values (w h) (send this get-client-size))
       (define hinset (send this horizontal-inset))
       (define vinset (send this vertical-inset))
@@ -336,7 +346,8 @@
         (lambda ()
           (send pb select-all)
           (send pb clear)
-          (send pb set-hover-pict #f 0 0))))
+          (send pb set-hover-pict #f 0 0)))
+      (set! group #f))
 
     ;; Set the contents of the container to SNIP, removing all the other snips
     (define/public (set-snip snip)
@@ -364,7 +375,6 @@
         (lambda ()
           (with-edit-sequence pb
             (lambda ()
-              (send pb clear)
               (set! group new-group)
               (insert-group-contents pb group)
               (layout-group pb group))))))
@@ -398,6 +408,34 @@
             (ey (box (send event get-y))))
         (send pb global-to-local ex ey)
         (send this set-hover-pict pict (unbox ex) (unbox ey))))
+
+    ;; Export the contents of the container to an image in FILE-NAME.  The
+    ;; image will be width/height in size, or if they are #f, the image will
+    ;; have the same size as the canvas.
+    (define/public (export-image-to-file file-name (width #f) (height #f))
+      (let-values (((cw ch) (send this get-size)))
+        (unless (and width height)
+          (set! width (or width cw))
+          (set! height (or height ch)))
+        (let* ((bitmap (if (regexp-match #px".*\\.(?i:svg)" file-name)
+                           #f
+                           (make-bitmap width height #t)))
+               (dc (if bitmap
+                       (new bitmap-dc% [bitmap bitmap])
+                       (new svg-dc%
+                            [width width] [height height]
+                            [output file-name]
+                            [exists 'truncate/replace]))))
+          ;; NOTE: scaling works, but makes the entire plot blurry
+          (send dc scale (/ width cw) (/ height ch))
+          (unless bitmap
+            (send dc start-doc "export to file"))
+          ;; NOTE: print-to-dc handles start-page/end-page calls
+          (send (send this get-editor) print-to-dc dc 0)
+          (unless bitmap
+            (send dc end-doc))
+          (when bitmap
+            (send bitmap save-file file-name 'png)))))
 
     ;; Don't swallow scroll wheel events, as this canvas does not scroll.
     ;; Instead, pass these events to any snips which might need them (like the
