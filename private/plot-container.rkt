@@ -220,8 +220,6 @@
 ;; Insert into the pasteboard all the snips in the snip-group GROUP, replacing
 ;; any other snips in the pasteboard PB.
 (define (insert-group-contents pb group)
-  (send pb select-all)
-  (send pb clear)
   (match-define (snip-group border spacing columns contents) group)
   (for ([item (in-list contents)])
     (if (snip-group? item)
@@ -375,6 +373,8 @@
         (lambda ()
           (with-edit-sequence pb
             (lambda ()
+              (send pb select-all)
+              (send pb clear)
               (set! group new-group)
               (insert-group-contents pb group)
               (layout-group pb group))))))
