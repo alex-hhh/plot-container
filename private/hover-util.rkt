@@ -3,7 +3,7 @@
 ;; hover-util.rkt -- utilities for generating hover information for plots
 ;;
 ;; This file is part of plot-container -- canvas to hold plot snips
-;; Copyright (c) 2019 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +36,7 @@
 ;; Resources for drawing overlays on the plots.  Defined in one place to
 ;; ensure consistency across all the plots.
 
-(define hover-tag-background (make-object color% #xff #xf8 #xdc 0.8))
+(define hover-tag-background (make-object color% #xff #xf8 #xdc 0.95))
 (define hover-tag-item-color (make-object color% #x2f #x4f #x4f))
 (define hover-tag-label-color (make-object color% #x77 #x88 #x99))
 (define hover-tag-title-font (send the-font-list find-or-create-font 12 'default 'normal 'normal))
@@ -112,8 +112,8 @@
                        (car p0)
                        (apply vl-append 3 p0)))
                (p2 (cc-superimpose
-                    (filled-rounded-rectangle (+ (pict-width p1) 10)
-                                              (+ (pict-height p1) 10) -0.1
+                    (filled-rounded-rectangle (+ (pict-width p1) 15)
+                                              (+ (pict-height p1) 15) -0.1
                                               #:draw-border? #f
                                               #:color hover-tag-background)
                     p1)))
