@@ -4,7 +4,7 @@
 ;;
 ;; This file is part of plot-container
 ;; https://github.com/alex-hhh/plot-container
-;; Copyright (c) 2019 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the Free
@@ -303,6 +303,14 @@
     (super-new [parent parent]
                [editor pb]
                [style (list* 'no-hscroll 'no-vscroll style)])
+
+    ;; Put the editor in lazy refresh mode -- for the types of applications we
+    ;; use (interactive plots), using the canvas refresh method (instead of
+    ;; calling on-paint directly) provides slightly better performance when
+    ;; mouse events queue updates as several refreshes can be done in one
+    ;; go...  The user can still change this back to false, since the
+    ;; `lazy-refresh` method is still available on the plot-container% itself.
+    (send this lazy-refresh #t)
 
     (define/override (on-size w h)
       (super on-size w h)
