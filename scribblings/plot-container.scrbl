@@ -3,6 +3,8 @@
                     plot-container/hover-util
                     racket/gui/base
                     racket/base
+                    racket/class
+                    racket/contract
                     pict/snip
                     plot/no-gui
                     plot/snip
@@ -25,7 +27,7 @@
   on-hover callbacks for the plots.  The container has the following features:
 
   @bold{Snips} will be arranged either using a specified layout (see
-  @racket[set-snips/layout]) or, by default, in rows and columns such that
+  @method[plot-container% set-snips/layout]) or, by default, in rows and columns such that
   each occupy an equal amount of space -- i.e. all snips have the same size.
   The snips will be resized dynamically if the container itself changes size
   or new snips are added.  The number of columns is specified when the
@@ -40,17 +42,18 @@
   @bold{Floating snips} will show up on top of the plot snips and are not
   placed in rows and columns, instead the user can drag them around and they
   can be used to display additional information, such as a plot legend.  Use
-  @racket[add-floating-snip] and @racket[set-floating-snip] to add floating
+  @method[plot-container% add-floating-snip] and
+  @method[plot-container% set-floating-snip] to add floating
   snips.  Just as with the plot snips, any @racket[snip%] object is a valid
   floating snip, in particular @racket[pict-snip%] instances are useful for
   constructing images based on the pict package.
 
   A @bold{Background Message} can be set up to be shown when the plot
-  container is empty, see @racket[set-background-message].  This is useful, as
+  container is empty, see @method[plot-container% set-background-message].  This is useful, as
   the contents of the plot container can be changed dynamically at runtime.
 
-  A @bold{Floating Snip} can be added using @racket[set-hover-pict] or
-  @racket[set-hover-pict-at-mouse-event].  This is intended to support
+  A @bold{Floating Snip} can be added using @method[plot-container% set-hover-pict] or
+  @method[plot-container% set-hover-pict-at-mouse-event].  This is intended to support
   implementing tooltips or displaying additional information when the user
   hovers the mouse over various plot elements.
 
@@ -80,9 +83,9 @@
     correct dimensions and avoid a snip resize operation when these snips are
     added to the container.
 
-    @bold{WARNING} The cell dimensions are only valid if the snips are
-    arranged in rows and columns by calling @racket[add-snips].  If a layout
-    is used, as per @racket[add-snips/layout], the cell dimensions returned by
+    @bold{WARNING:} The cell dimensions are only valid if the snips are
+    arranged in rows and columns by calling @method[plot-container% set-snips].  If a layout
+    is used, as per @method[plot-container% set-snips/layout], the cell dimensions returned by
     this method will not correspond to the ones assigned to the snips in the
     layout.
 
@@ -155,7 +158,7 @@
              any/c]{
     Display @racket[pict] at the location of the mouse @racket[event].  This
     method will take the mouse event coordinates, convert them to plot
-    container coordinates and call @racket[set-hover-pict].
+    container coordinates and call @method[plot-container% set-hover-pict].
 
   }
 
@@ -243,9 +246,9 @@ for more details.
 (define (hover-callback snip event x y)
   (if (good-hover? snip x y event)
     ;; Need to add overlay renderers for position x,y
-    (send snip set-overlay-renderers ...)
-    ;; Nedd to clear any overlay renderers
-    (send snip set-overlay-renderers #f))))
+    (send snip #,(method 2d-plot-snip% set-overlay-renderers) ...)
+    ;; Need to clear any overlay renderers
+    (send snip #,(method 2d-plot-snip% set-overlay-renderers) #f))))
 
 }
 
@@ -285,7 +288,7 @@ for more details.
   Move @racket[snip] to @racket[location], adjusting it as necessary to remain
   fully visible inside the canvas.  This is intended to be used with locations
   retrieved by @racket[get-snip-location] and unlike the
-  @racket[plot-container%]'s @racket[add-floating-snip], this function will
+  @xmethod[plot-container% add-floating-snip], this function will
   adjust the location so that the snip visible in the container -- this is
   useful if the container has changed size since the location was retrieved
   and saved.
