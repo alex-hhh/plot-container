@@ -9,13 +9,13 @@ pool:
 
 variables:
   PACKAGE_NAME: "plot-container"
-  RACKET_VERSION: 7.9
+  RACKET_VERSION: 8.1-cs
   RACKET_DIR: $(Agent.BuildDirectory)/racket
   PLTSTDERR: 'error warning@optimizer'
 
 steps:
 
-- script: bash ./ci/install-racket.sh
+- script: bash ./etc/install-racket.sh
   displayName: 'Instal Racket $(RACKET_VERSION)'
 
   # NOTE: the Azure pipelines build process checks out sources in a directory
