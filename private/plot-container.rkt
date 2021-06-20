@@ -4,7 +4,7 @@
 ;;
 ;; This file is part of plot-container
 ;; https://github.com/alex-hhh/plot-container
-;; Copyright (c) 2019, 2020 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019, 2020, 2021 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by the Free
@@ -37,10 +37,6 @@
     (let ((ox (- (/ cw 2) (/ w 2)))
           (oy (- (/ ch 2) (/ h 2))))
       (send dc draw-text msg ox oy))))
-
-(define message-font
-  (send the-font-list find-or-create-font 36 'default 'normal 'normal))
-(define message-color "gray")
 
 ;; Helper to make the read-only-pasteboard% writable during the execution of
 ;; THUNK
@@ -172,6 +168,8 @@
             (unless (find-first-snip)
               (send dc clear)
               (when background-message
+                (define message-font
+                  (send the-font-list find-or-create-font 36 'default 'normal 'normal))
                 (draw-centered-message dc background-message "gray" message-font))))
           (when hover
             (match-define (list pict x y) hover)
@@ -266,7 +264,8 @@
 (define plot-container%/c
   (class/c
    (init [parent (or/c (is-a?/c frame%) (is-a?/c dialog%)
-                       (is-a?/c panel%) (is-a?/c pane%))])
+                       (is-a?/c panel%) (is-a?/c pane%))]
+         [background-message (or/c #f string?)])
    (init-field [columns positive-integer?] [spacing positive-integer?])
    (cell-dimensions (->*m (positive-integer?)
                           (#:columns positive-integer?
@@ -294,10 +293,11 @@
 ;; information about the current position on the plot.
 (define plot-container%
   (class editor-canvas%
-    (init parent [style null])
+    (init parent [style null] [background-message #f])
     (init-field [columns 1] [spacing 5])
 
     (define pb (new plot-container-pasteboard%))
+    (send pb set-background-message background-message)
     (define group #f)
 
     (super-new [parent parent]

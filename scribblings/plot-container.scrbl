@@ -42,25 +42,27 @@
   @bold{Floating snips} will show up on top of the plot snips and are not
   placed in rows and columns, instead the user can drag them around and they
   can be used to display additional information, such as a plot legend.  Use
-  @method[plot-container% add-floating-snip] and
-  @method[plot-container% set-floating-snip] to add floating
-  snips.  Just as with the plot snips, any @racket[snip%] object is a valid
-  floating snip, in particular @racket[pict-snip%] instances are useful for
-  constructing images based on the pict package.
+  @method[plot-container% add-floating-snip] and @method[plot-container%
+  set-floating-snip] to add floating snips.  Just as with the plot snips, any
+  @racket[snip%] object is a valid floating snip, in particular
+  @racket[pict-snip%] instances are useful for constructing images based on
+  the pict package.
 
   A @bold{Background Message} can be set up to be shown when the plot
-  container is empty, see @method[plot-container% set-background-message].  This is useful, as
-  the contents of the plot container can be changed dynamically at runtime.
+  container is empty, see @method[plot-container% set-background-message].
+  This is useful, as the contents of the plot container can be changed
+  dynamically at runtime.
 
-  A @bold{Floating Snip} can be added using @method[plot-container% set-hover-pict] or
-  @method[plot-container% set-hover-pict-at-mouse-event].  This is intended to support
-  implementing tooltips or displaying additional information when the user
-  hovers the mouse over various plot elements.
+  A @bold{Floating Snip} can be added using @method[plot-container%
+  set-hover-pict] or @method[plot-container% set-hover-pict-at-mouse-event].
+  This is intended to support implementing tooltips or displaying additional
+  information when the user hovers the mouse over various plot elements.
 
   @defconstructor[([parent (or/c (is-a?/c frame%) (is-a?/c dialog%)
                                  (is-a?/c panel%) (is-a?/c pane%))]
                    [columns positive-integer? 1]
-                   [spacing positive-integer? 5])]{
+                   [spacing positive-integer? 5]
+                   [background-message (or/c #f string?) #f])]{
 
     Create a new instance of a @racket[plot-container%] which will arrange
     plot @racket[snip%] objects in @racket[columns] columns with
@@ -68,6 +70,10 @@
     determined by the number of plot snips added.  Additional init argyments
     can be passed in, they will all go to the @racket[editor-canvas%] class,
     see its documentation for what options are available.
+
+    @racket[background-message] represents the message to be shown when there
+    are no snips in the container.  It can be changed using
+    @method[plot-container% set-background-message].
 
   }
 
@@ -84,10 +90,10 @@
     added to the container.
 
     @bold{WARNING:} The cell dimensions are only valid if the snips are
-    arranged in rows and columns by calling @method[plot-container% set-snips].  If a layout
-    is used, as per @method[plot-container% set-snips/layout], the cell dimensions returned by
-    this method will not correspond to the ones assigned to the snips in the
-    layout.
+    arranged in rows and columns by calling @method[plot-container%
+    set-snips].  If a layout is used, using @method[plot-container%
+    set-snips/layout], the cell dimensions returned by this method will not
+    correspond to the ones assigned to the snips in the layout.
 
   }
 
@@ -156,6 +162,7 @@
   @defmethod[(set-hover-pict-at-mouse-event [pict (or/c #f pict?)]
                                             [event (is-a?/c mouse-event%)])
              any/c]{
+
     Display @racket[pict] at the location of the mouse @racket[event].  This
     method will take the mouse event coordinates, convert them to plot
     container coordinates and call @method[plot-container% set-hover-pict].
@@ -189,7 +196,7 @@
   @racket[spacing] space between items.  All items will have the same
   dimensions and any @racket[plot-container-group?] items will have this space
   sub-divided among the items in that group.  The result of these functions
-  are intended to be passed to @xmethod[plot-container% set-snips/layout].
+  are intended to be passed to @method[plot-container% set-snips/layout].
 
   @racket[vgroup] will place items in one vertical column with the height
   equally divided between all items.
