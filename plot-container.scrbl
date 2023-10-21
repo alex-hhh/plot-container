@@ -27,17 +27,17 @@
   on-hover callbacks for the plots.  The container has the following features:
 
   @bold{Snips} will be arranged either using a specified layout (see
-  @method[plot-container% set-snips/layout]) or, by default, in rows and columns such that
-  each occupy an equal amount of space -- i.e. all snips have the same size.
-  The snips will be resized dynamically if the container itself changes size
-  or new snips are added.  The number of columns is specified when the
-  @racket[plot-container%] is instantiated and the number of rows will be
-  calculated based on the number of snips and the column count.  The plot
-  snips must be any @racket[snip%], but this container class was originally
-  intended to display plots produced by @racket[plot-snip], thus its name.
-  Plot snips can be added to the container using @method[plot-container%
-  set-snip] or @method[plot-container% set-snips] or @method[plot-container%
-  set-snips/layout].
+  @method[plot-container% set-snips/layout]) or, by default, in rows and
+  columns such that each occupy an equal amount of space -- i.e. all snips
+  have the same size.  The snips will be resized dynamically if the container
+  itself changes size or new snips are added.  The number of columns is
+  specified when the @racket[plot-container%] is instantiated and the number
+  of rows will be calculated based on the number of snips and the column
+  count.  The plot snips must be any @racket[snip%], but this container class
+  was originally intended to display plots produced by @racket[plot-snip],
+  thus its name.  Plot snips can be added to the container using
+  @method[plot-container% set-snip] or @method[plot-container% set-snips] or
+  @method[plot-container% set-snips/layout].
 
   @bold{Floating snips} will show up on top of the plot snips and are not
   placed in rows and columns, instead the user can drag them around and they
