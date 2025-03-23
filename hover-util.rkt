@@ -3,7 +3,7 @@
 ;; hover-util.rkt -- utilities for generating hover information for plots
 ;;
 ;; This file is part of plot-container -- canvas to hold plot snips
-;; Copyright (c) 2019, 2020, 2023 Alex Harsányi <AlexHarsanyi@gmail.com>
+;; Copyright (c) 2019-2020, 2023, 2025 Alex Harsányi <AlexHarsanyi@gmail.com>
 ;;
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU Lesser General Public License as published by
@@ -26,8 +26,6 @@
          racket/match
          racket/math
          pict
-         plot/no-gui
-         pict/snip
          plot/utils
          plot
          "main.rkt")
@@ -35,13 +33,36 @@
 ;; Resources for drawing overlays on the plots.  Defined in one place to
 ;; ensure consistency across all the plots.
 
-(define hover-tag-background (make-object color% #xff #xf8 #xdc 0.95))
-(define hover-tag-item-color (make-object color% #x2f #x4f #x4f))
-(define hover-tag-label-color (make-object color% #x77 #x88 #x99))
-(define hover-tag-item-font (send the-font-list find-or-create-font 12 'default 'normal 'normal))
-(define hover-tag-label-font (send the-font-list find-or-create-font 10 'default 'normal 'normal))
-(define hover-tag-item-face (cons hover-tag-item-color hover-tag-item-font))
-(define hover-tag-label-face (cons hover-tag-label-color hover-tag-label-font))
+(define hover-tag-background
+  (make-object color% #xff #xf8 #xdc 0.95))
+
+(define (hover-tag-item-font)
+  (send the-font-list find-or-create-font
+        12
+        (plot-font-face)
+        'default
+        'normal
+        'normal))
+
+(define (hover-tag-item-face)
+  (let ([color (make-object color% #x2f #x4f #x4f)]
+        [font (send the-font-list find-or-create-font
+                    12
+                    (plot-font-face)
+                    'default
+                    'normal
+                    'normal)])
+    (cons color font)))
+
+(define (hover-tag-label-face)
+  (let ([color (make-object color% #x77 #x88 #x99)]
+        [font (send the-font-list find-or-create-font
+                    10
+                    (plot-font-face)
+                    'default
+                    'normal
+                    'normal)])
+    (cons color font)))
 
 ;; Can we add overlays to plot-snip% instances? This functionality is only
 ;; present in a development branch of the plot package, if that package is not
@@ -95,10 +116,11 @@
         ;; Special case: a single pict passed in is displayed as is...
         (point-pict-1 (vector x y) (car labels) #:point-sym 'none #:anchor 'auto)
         ;; Otherwise create new picts and pack them into a final pict
-        (let* ((p0 (for/list ((label (in-list labels)) #:when label)
+        (let* ((font (hover-tag-item-font))
+               (p0 (for/list ((label (in-list labels)) #:when label)
                      (if (pict? label)
                          label
-                         (text label hover-tag-item-font))))
+                         (text label font))))
                (p1 (if (= (length p0) 1)
                        (car p0)
                        (apply vl-append 3 p0)))
@@ -137,6 +159,8 @@
 ;; NOTE: the returned pict object can be placed on a plot using
 ;; `add-pict-overlay`.
 (define (make-hover-badge items)
+  (define item-face (hover-tag-item-face))
+  (define label-face (hover-tag-label-face))
   (define column-count
     (for/fold ((column-count 0)) ((item (in-list items)))
       (max column-count (length item))))
@@ -144,12 +168,12 @@
   (for ((item (in-list items)))
     (let* ((key (car item))
            (vals (reverse (cdr item)))
-           (face (if key hover-tag-item-face hover-tag-label-face)))
+           (face (if key item-face label-face)))
       (for ((dummy (in-range (- column-count (add1 (length vals))))))
         (set! picts (cons (text "" face) picts)))
       (for ((val (in-list vals)))
         (set! picts (cons (text val face) picts)))
-      (set! picts (cons (text (or key "") hover-tag-label-face) picts))))
+      (set! picts (cons (text (or key "") label-face) picts))))
   (let ((p0 (table column-count picts lc-superimpose cc-superimpose 15 3)))
     (cc-superimpose
      (filled-rounded-rectangle
